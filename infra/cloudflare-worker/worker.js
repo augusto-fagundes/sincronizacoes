@@ -1,4 +1,4 @@
-const N8N_FALLBACK_URL =
+const FALLBACK_N8N =
   "https://augusto-fagundes.app.n8n.cloud/webhook/6952d587-fa8a-41ae-9cee-b280006d8fa5/chat";
 
 export default {
@@ -16,27 +16,24 @@ export default {
 
     const url = new URL(request.url);
 
-    // healthcheck
+    // health
     if (request.method === "GET" && url.pathname === "/health") {
-      return new Response(
-        JSON.stringify({ ok: true, runner: "cloudflare-worker" }),
-        {
-          status: 200,
-          headers: { "Content-Type": "application/json", ...cors },
-        }
-      );
+      return new Response(JSON.stringify({ ok: true, worker: "api-sinc" }), {
+        status: 200,
+        headers: { "Content-Type": "application/json", ...cors },
+      });
     }
 
-    // pega o body
-    const body = await request.json().catch(() => ({}));
+    // body do front
+    const payload = await request.json().catch(() => ({}));
 
-    // usa a env se existir, senão usa o fallback
-    const webhook = env.N8N_WEBHOOK_URL || N8N_FALLBACK_URL;
+    // pega do env ou usa fallback
+    const webhook = env.N8N_WEBHOOK_URL || FALLBACK_N8N;
 
     const upstream = await fetch(webhook, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body),
+      body: JSON.stringify(payload),
     });
 
     const text = await upstream.text();
